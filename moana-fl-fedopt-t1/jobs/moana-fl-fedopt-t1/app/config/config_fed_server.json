@@ -1,0 +1,78 @@
+{
+    "format_version": 2,
+    "num_rounds": 4,
+    "min_clients": 2,
+
+    "server": {
+        "heart_beat_timeout": 600
+    },
+    "task_data_filters": [],
+    "task_result_filters": [],
+    "components": [
+        {
+            "id": "persistor",
+            "path": "model_persistor.TFModelPersistor",
+            "args": {
+                "save_name": "tf_model.h5"
+            }
+        },
+        {
+            "id": "model",
+            "path": "model.MC_Net",
+            "args": {}
+        },
+        {
+            "id": "shareable_generator",
+            "path": "fedopt.TFFedOptModelShareableGenerator",
+            "args": {
+              "device": "cpu",
+              "source_model": "model",
+              "optimizer_args": {
+                "name": "Adam",
+                "args": {
+                  "learning_rate": 1e-4
+                },
+                "config_type": "dict"
+              },
+              "lr_scheduler_args": {
+                "name": "ExponentialDecay",
+                "args": {
+                  "initial_learning_rate": 1e-4,
+                  "decay_steps": "{num_rounds}",
+                  "decay_rate": 0.96
+                },
+                "config_type": "dict"
+              }
+            }
+        },
+        {
+            "id": "aggregator",
+            "path": "nvflare.app_common.aggregators.intime_accumulate_model_aggregator.InTimeAccumulateWeightedAggregator",
+            "args": {
+                "expected_data_kind": "WEIGHT_DIFF"
+            }
+        },
+        {
+            "id": "json_generator",
+            "path": "nvflare.app_common.widgets.validation_json_generator.ValidationJsonGenerator",
+            "args": {}
+        }
+    ],
+    "workflows": [
+        {
+            "id": "scatter_and_gather",
+            "name": "ScatterAndGather",
+            "args": {
+                "min_clients": "{min_clients}",
+                "num_rounds": "{num_rounds}",
+                "start_round": 0,
+                "wait_time_after_min_received": 10,
+                "aggregator_id": "aggregator",
+                "persistor_id": "persistor",
+                "shareable_generator_id": "shareable_generator",
+                "train_task_name": "train",
+                "train_timeout": 0
+            }
+        }
+    ]
+}
