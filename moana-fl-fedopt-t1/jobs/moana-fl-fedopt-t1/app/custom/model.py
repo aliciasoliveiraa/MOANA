@@ -1,8 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import tensorflow.keras.backend as K
 from tensorflow import keras
-
 tf.random.set_seed(22)
 np.random.seed(22)
 
@@ -107,8 +105,6 @@ class GroupNormalization(Layer):
         if mask is None:
             mask = tf.ones_like(inputs)
         else:
-            # We broadcast before we group in case the mask does not have the
-            # same shape as the input.
             mask = tf.broadcast_to(mask, input_shape)
 
         reshaped_inputs = self._reshape_into_groups(inputs)
@@ -205,7 +201,7 @@ class GroupNormalization(Layer):
     
 
 
-""" Motion correction network for MC2-Net """
+""" Motion correction network """
 
 
 class Encoder(keras.Model):
@@ -228,17 +224,14 @@ class Encoder(keras.Model):
 
     def call(self, x, training=True):
         x = self.conv1(x)
-        #print(f'Encoder Conv1: {x.shape}')
         x = self.n1(x, training=training)
         x = tf.nn.relu(x)
 
         x = self.conv2(x)
-        #print(f'Encoder Conv2: {x.shape}')
         x = self.n2(x, training=training)
         x = tf.nn.relu(x)
 
         x = self.conv3(x)
-        #print(f'Encoder Conv3: {x.shape}')
         x = self.n3(x, training=training)
         x = tf.nn.relu(x)
 
@@ -263,13 +256,9 @@ class Residual(keras.Model):
         inputs = x
 
         x = self.conv1(x)
-        #print(f'Residual Conv1: {x.shape}')
-        # x = self.in1(x, training=training)
         x = tf.nn.relu(x)
 
         x = self.conv2(x)
-        #print(f'Residual Conv2: {x.shape}')
-        # x = self.in2(x, training=training)
         x = tf.nn.relu(x)
 
         x = tf.add(x, inputs)
@@ -296,17 +285,14 @@ class Decoder(keras.Model):
 
     def call(self, x, training=True):
         x = self.conv1(x)
-        #print(f'Decoder Conv1: {x.shape}')
         x = self.in1(x, training=training)
         x = tf.nn.relu(x)
 
         x = self.conv2(x)
-        #print(f'Decoder Conv2: {x.shape}')
         x = self.in2(x, training=training)
         x = tf.nn.relu(x)
 
         x = self.conv3(x)
-        #print(f'Decoder Conv3: {x.shape}')
         x = self.in3(x, training=training)
         x = tf.nn.relu(x)
 
@@ -348,12 +334,10 @@ class MC_Net(keras.Model):
             x_list.append(self.encoder_list[i](x[i], training=training))
         x = tf.concat(x_list, axis=-1)
         
-        #print(f"Shape after concatenation in Encoder: {tf.shape(x)}")
 
         for i in range(self.num_res_block):
             x = (self.res_block_list[i](x, training=training))
 
-        #print(f"Shape after Residual Blocks: {tf.shape(x)}")
         
         y = tf.split(x, num_or_size_splits=self.num_contrast, axis=-1)
         
@@ -361,43 +345,31 @@ class MC_Net(keras.Model):
         for i in range(self.num_contrast):
             y_list.append(self.decoder_list[i](y[i], training=training))
 
-        #print(f"Shape after concatenation in Decoder: {tf.shape(y)}")
                 
         return y_list
 
 
 def ssim_loss(img1, img2):
-    #print('img1 ssim', img1)
-    #print('img2 ssim', img2)
     ssim = -tf.math.log((tf.image.ssim(img1, img2, max_val=1.0)+1)/2)
-    #print('ssim_value', ssim)
     return ssim
 
 
 def vgg_layers(layer_names):
-    local_weights_path = '/projects/I20240003/alicia.oliveira/moana-fl-fedopt-t1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+    local_weights_path = '/path/to/moana-fl-fedopt-t1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
     vgg = tf.keras.applications.vgg16.VGG16(include_top=False, weights=local_weights_path, input_shape=(256, 256, 3))
     
-    #vgg = tf.keras.applications.vgg16.VGG16(include_top=False, weights='imagenet', input_shape=(256, 256, 3))
     vgg.trainable = False
 
     outputs = [vgg.get_layer(name).output for name in layer_names]
-    #print('outputs', outputs)
     model = tf.keras.Model([vgg.input], outputs)
-    #print('model vgg', model)
     return model
 
 
 def vgg_loss(img1, img2, loss_model):
-    #print("img1 vgg", img1)
-    #print("img2 vgg", img2)
-    #tf.print("Shape of y_true before repeat:", tf.shape(img1))
-    #tf.print("Shape of y_pred before repeat:", tf.shape(img2))
     img1 = tf.repeat(img1, 3, -1)
     img2 = tf.repeat(img2, 3, -1)
     
     mean = tf.reduce_mean(tf.square(loss_model(img1) - loss_model(img2)))
-    #print('mean', mean)
     
     return mean
 

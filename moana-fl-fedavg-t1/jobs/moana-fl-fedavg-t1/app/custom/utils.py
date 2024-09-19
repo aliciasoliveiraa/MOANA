@@ -2,6 +2,7 @@ import numpy as np
 from   scipy.ndimage import rotate, shift
 import cv2
 from   skimage.metrics import structural_similarity
+import tensorflow as tf
 
 
 def transpose(img, r, tx, ty, channel_last=True):
@@ -119,7 +120,7 @@ def test_nrmse(x_img, y_img, p_img):
     return np.mean(x_nrmse), np.mean(p_nrmse)
 
 
-import tensorflow as tf
+#Function validate_axis from tf_utils.py
 
 def validate_axis(axis, input_shape):
   """Validate an axis value and returns its standardized form.
@@ -157,6 +158,8 @@ def validate_axis(axis, input_shape):
   if len(axis) != len(set(axis)):
     raise ValueError(f'Duplicate axis: {tuple(axis)}')
   return axis
+
+#Functions flat_layer_weights_dict and unflat_layer_weights_dict from NVFlare/nvflare/app_opt/tf/utils.py
 
 SPECIAL_KEY = "_nvf_"
 

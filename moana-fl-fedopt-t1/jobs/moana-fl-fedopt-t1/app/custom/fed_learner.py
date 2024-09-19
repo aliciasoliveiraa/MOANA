@@ -1,41 +1,27 @@
 import os
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.callbacks import TensorBoard
-from tensorflow import keras
-from absl import app, flags, logging
-from PIL import Image
-from tensorflow.python.platform import build_info as tf_build_info
-
-import matplotlib.pyplot as plt
-
-from utils import test_ssim, test_nmi, test_nrmse, save_image
-from contextlib import redirect_stdout, redirect_stderr
-
 import time
 from tqdm import tqdm
 from datetime import timedelta
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from absl import logging
+import matplotlib.pyplot as plt
 
 from nvflare.apis.event_type import EventType
 from nvflare.apis.dxo import DXO, DataKind, MetaKey, from_shareable
 from nvflare.apis.fl_constant import ReturnCode
-from nvflare.apis.fl_constant import FLContextKey
 from nvflare.apis.fl_context import FLContext
 from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.abstract.learner_spec import Learner
-from nvflare.app_common.app_constant import AppConstants
 
 from dataset import datalist_loader, train_batch_data_loader, batch_data_loader
 from utils import rot_tra_argumentation, flat_layer_weights_dict, unflat_layer_weights_dict
 from model import MC_Net, vgg_layers, make_custom_loss
 
-#config = tf.compat.v1.ConfigProto()
-#config.gpu_options.allow_growth=True
-#sess = tf.compat.v1.Session(config=config)
-
 #CPU
-#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 #GPU
 #os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -45,17 +31,7 @@ if tf.test.gpu_device_name():
 else:
     print("No GPU found. Using CPU")
 
-#print("cudnn_version",tf_build_info.build_info['cudnn_version'])
-#print("cuda_version",tf_build_info.build_info['cuda_version'])
- 
-# Allow memory growth for the GPU
-#physical_devices = tf.config.experimental.list_physical_devices('GPU')
-#tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-#MEMORY ALLOCATOR
-#os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
-#os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-'''
 #MLFLOW
 import mlflow
 
@@ -69,8 +45,8 @@ mlflow.enable_system_metrics_logging()
 mlflow.set_tracking_uri("http://10.2.1.38:5000")
 
 #mlflow.create_experiment(name='MLFlow Moana-FL')
-mlflow.set_experiment(experiment_name='MLFlow moana-fl-fedopt-t1')
-'''
+mlflow.set_experiment(experiment_name='MLFlow Moana FedOPT')
+
 class FedLearner(Learner):
 
     def __init__(
@@ -85,13 +61,13 @@ class FedLearner(Learner):
         lambda_ssim=1,
         lambda_vgg=1e-2,
         path_logs='logs/',
-        path_model='/projects/I20240003/alicia.oliveira/moana-fl-fedopt-t1/',
-        path_data='/projects/I20240003/alicia.oliveira/Data/',
+        path_model='/path/to/moana-fl-fedopt-t1/',
+        path_data='/path/to/Data/',
         path_weight='weight/',
         path_saved_models='saved_models',
-        reg_type='BraTS2021_Training_Data_png_T256_selected_AREA_UP_23000_Alt_300slices_70_15_15_FL_L1',
+        reg_type='DatasetFolder',
         save_epoch=10,
-        path_training_time='/projects/I20240003/alicia.oliveira/moana-fl-fedopt-t1/training_time.txt',
+        path_training_time='/path/to/moana-fl-fedopt-t1/training_time.txt',
         path_loss_plot='loss_plots/',
         path_accuracy_plot='accuracy_plots/'
     ):
@@ -144,35 +120,18 @@ class FedLearner(Learner):
 
         for layer in self.model.layers:
             print('LAYER NAME FL', layer.name)
-        
-        #self.model.compile(optimizer=keras.optimizers.Adam(self.lr), loss=self.final_loss, metrics=[tf.keras.metrics.Accuracy(), tf.keras.metrics.Precision(), tf.keras.metrics.Recall(), tf.keras.metrics.RootMeanSquaredError(), tf.keras.metrics.KLDivergence()])
-        
+                
         input_shape = [(None, self.image_size, self.image_size, 1)]
         self.model.build(input_shape=input_shape * self.num_contrast)
         self.model.summary()
 
         self.layer_weights_dict = {layer.name: layer.get_weights() for layer in self.model.layers}
-        #print('LAYER_WEIGHTS_DICT', self.layer_weights_dict)
-        #print('LEN LAYER_WEIGHTS_DICT', len(self.layer_weights_dict))
 
         self.flat_layer_weights_dict = flat_layer_weights_dict(self.layer_weights_dict)
-        #print('FLAT_LAYER_WEIGHTS_DICT', self.flat_layer_weights_dict)
-        #print('LEN FLAT_LAYER_WEIGHTS_DICT', len(self.flat_layer_weights_dict))
         
         # Data loading
         self.y_train_datalist, self.x_train_datalist = datalist_loader(self.path_data, self.reg_type, 'train')
         self.y_valid_datalist, self.x_valid_datalist = datalist_loader(self.path_data, self.reg_type, 'valid')
-        
-        '''
-        self.train_size = len(self.y_train_datalist[0])
-        #print('self.train_size', self.train_size)
-        self.batch_number = int(np.ceil(self.train_size // self.batch_size))
-        #print('self.batch_number', self.batch_number)
-        self.valid_size = len(self.y_valid_datalist[0])
-        #print('self.valid_size', self.valid_size)
-        self.batch_number_valid = int(np.ceil(self.valid_size // self.batch_size))
-        #print('self.batch_number_valid', self.batch_number_valid)
-        '''
         
         self.iter_interval = 1
         self.min_val_loss = 100000
@@ -184,8 +143,6 @@ class FedLearner(Learner):
         
         dxo = from_shareable(shareable)
         model_weights = dxo.data
-        #print('MODEL_WEIGHTS', model_weights)
-        #print('LEN MODEL_WEIGHTS', len(model_weights))
         
         # Log all properties in FLContext
         #self.log_info(fl_ctx, f"FLContext properties: {fl_ctx.props}")
@@ -193,7 +150,6 @@ class FedLearner(Learner):
         # Obtain the current round from the FLContext
         job_meta = fl_ctx.get_prop("__job_meta__", default={})
         self.min_clients = job_meta.get("min_clients", "Clients property not found")
-        #print('Min clients', self.min_clients)
         
         task_data = fl_ctx.get_prop("__task_data__", default={})
         headers = task_data.get("__headers__", {})
@@ -205,12 +161,9 @@ class FedLearner(Learner):
         self.job_id = fl_ctx.get_job_id()
 
         weights_list = list(model_weights.values())
-        #print('WEIGHTS_LIST', weights_list)
-        #print('LEN WEIGHTS_LIST', len(weights_list))
 
         self.client_name = fl_ctx.get_identity_name()
         client_index = int(self.client_name.split('-')[1]) - 1
-        #print('Client index', client_index)
 
         if self.current_round == 0:
             def split_data(datalist, num_clients, client_idx):
@@ -220,21 +173,6 @@ class FedLearner(Learner):
                 
                 split_datalist = [contrast[start_idx:end_idx] for contrast in datalist]
                 return split_datalist
-            
-            '''
-            def split_data(datalist, num_clients, client_idx):
-                split_datalist = []
-                total_length = len(datalist[0])  # Total length of the dataset for each contrast
-
-                for contrast_data in datalist:
-                    split_size = total_length // num_clients
-                    start_idx = client_idx * split_size
-                    end_idx = (client_idx + 1) * split_size if client_idx != num_clients - 1 else total_length
-                    
-                    split_datalist.append(contrast_data[start_idx:end_idx])
-                
-                return split_datalist
-            '''
             
             self.y_train_datalist = split_data(self.y_train_datalist, self.min_clients, client_index)
             self.x_train_datalist = split_data(self.x_train_datalist, self.min_clients, client_index)
@@ -246,13 +184,9 @@ class FedLearner(Learner):
         self.log_info(fl_ctx, f"Client {self.client_name} has {num_images_train} training images.")
         
         self.train_size_client = len(self.y_train_datalist[0])
-        #print('self.train_size_client', self.train_size_client)
         self.batch_number_client = int(np.ceil(self.train_size_client // self.batch_size))
-        #print('self.batch_number_client', self.batch_number_client)
         self.valid_size_client = len(self.y_valid_datalist[0])
-        #print('self.valid_size_client', self.valid_size_client)
         self.batch_number_valid_client = int(np.ceil(self.valid_size_client // self.batch_size))
-        #print('self.batch_number_valid_client', self.batch_number_valid_client)
         
         print('---------------------JOB ID---------------------', self.job_id)
         print('---------------------CURRENT ROUND---------------------', self.current_round)
@@ -262,36 +196,25 @@ class FedLearner(Learner):
         
         # report updated weights in shareable
         new_weights = {layer.name: layer.get_weights() for layer in self.model.layers}
-        #print('new_weights', new_weights)
-        #print('len new_weights', len(new_weights))
-        
+
         new_weights_flat = flat_layer_weights_dict(new_weights)
-        #print('new_weights_flat', new_weights_flat)
-        #print('len new_weights_flat', len(new_weights_flat))
 
         # Initialize model_diff to have the same structure as new_weights_flat
         model_diff = {}
         
         for layer_name in new_weights_flat:
-            global_w = model_weights[layer_name]  # Assuming model_weights contains the global weights
+            global_w = model_weights[layer_name]
             local_w = new_weights_flat[layer_name]
             
-            # Ensure global_w and local_w are both arrays, not lists of arrays
             if isinstance(global_w, list):
                 global_w = np.array(global_w)
             if isinstance(local_w, list):
                 local_w = np.array(local_w)
             
-            # Calculate the difference
             diff = np.subtract(global_w, local_w)
             
-            # Store the result in model_diff
             model_diff[layer_name] = diff
         
-        #print('model_diff', model_diff)
-        #print('len (model_diff)', len(model_diff))
-        
-        #dxo = DXO(data_kind=DataKind.WEIGHTS, data=new_weights_flat)
         dxo = DXO(data_kind=DataKind.WEIGHT_DIFF, data=model_diff)
         
         dxo.set_meta_prop(MetaKey.NUM_STEPS_CURRENT_ROUND, self.train_size_client)
@@ -372,14 +295,7 @@ class FedLearner(Learner):
                         f'accuracy for T1: {train_accuracy[0]:.4f}, T1CE: {train_accuracy[1]:.4f}, T2: {train_accuracy[2]:.4f}, FL: {train_accuracy[3]:.4f}'
             self.log_info(fl_ctx, log_message)
 
-            if ((epoch + 1) % self.save_epoch) == 0:
-                '''
-                y_valid = batch_data_loader(self.y_valid_datalist, self.num_contrast)
-                x_valid = batch_data_loader(self.x_valid_datalist, self.num_contrast)
-
-                val_loss = self.local_validate(x_valid, y_valid, abort_signal)
-                '''
-                
+            if ((epoch + 1) % self.save_epoch) == 0:                
                 valid_loss = [0, 0, 0, 0]
                 valid_accuracy = [0, 0, 0, 0]
                 y_valid_datalist_shuffle, x_valid_datalist_shuffle = \
@@ -413,19 +329,16 @@ class FedLearner(Learner):
                 self.save_weights_dir = os.path.join(self.path_model, self.path_weight)
                 if not os.path.exists(self.save_weights_dir):
                     os.makedirs(self.save_weights_dir)
-                #self.model.save_weights(f'{self.save_weights_dir}weight_e{epoch+1:04d}.h5')
+                self.model.save_weights(f'{self.save_weights_dir}weight_e{epoch+1:04d}.h5')
                 
                 
                 # Save model for each 10 epochs
                 save_model_dir = os.path.join(self.path_model, self.path_saved_models)
                 if not os.path.exists(save_model_dir):
                     os.makedirs(save_model_dir)
-                #self.model.save(f'{save_model_dir}model_e{epoch + 1:04d}')
+                self.model.save(f'{save_model_dir}model_e{epoch + 1:04d}')
                 
-                if np.mean(valid_loss) < self.min_val_loss:
-                    #path_weight_min_val_loss_dir = os.path.join(self.save_weights_dir, f'weight_min_val_loss_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.h5')
-                    #path_save_models_dir = os.path.join(save_model_dir, f'model_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}')
-                    
+                if np.mean(valid_loss) < self.min_val_loss:                    
                     path_weight_min_val_loss_dir = os.path.join(self.save_weights_dir, f'weight_min_val_loss_job_{self.job_id}_client_{self.client_name}.h5')
                     path_save_models_dir = os.path.join(save_model_dir, f'model_job_{self.job_id}_client_{self.client_name}')
                     
@@ -433,7 +346,7 @@ class FedLearner(Learner):
                     self.model.save(path_save_models_dir, overwrite=True)
 
                     self.min_val_loss = np.mean(valid_loss)
-                '''
+                
                 with mlflow.start_run(run_name=f'{self.client_name}-epoch_{epoch+1}', log_system_metrics=True) as run:
                     mlflow.log_param("lr", self.lr)
                     mlflow.log_param("epochs", self.epochs)
@@ -478,11 +391,9 @@ class FedLearner(Learner):
                     mlflow.log_metric("valid_accuracy FL", valid_accuracy[3])
                     
                     mlflow.tensorflow.log_model(self.model, artifact_path="model")
-                    
-                    #print(mlflow.MlflowClient().get_run(run.info.run_id).data)
-                    
+                                        
                     mlflow.end_run()
-                '''
+                
                 print(f'Weight saved! val loss T1: {valid_loss[0]:.4f}, T1CE: {valid_loss[1]:.4f}, T2: {valid_loss[2]:.4f}, FL: {valid_loss[3]:.4f}')
                 print(f'Validation accuracy for T1: {valid_accuracy[0]:.4f}, T1CE: {valid_accuracy[1]:.4f}, T2: {valid_accuracy[2]:.4f}, FL: {valid_accuracy[3]:.4f}')
                 
@@ -492,9 +403,7 @@ class FedLearner(Learner):
                 del x_valid_batch, y_valid_batch
 
             
-            if epoch+1 == self.epochs:
-                #path_weight_final_dir = os.path.join(self.save_weights_dir, f'weight_final_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.h5')
-                
+            if epoch+1 == self.epochs:                
                 path_weight_final_dir = os.path.join(self.save_weights_dir, f'weight_final_job_{self.job_id}_client_{self.client_name}.h5')
 
                 self.model.save_weights(path_weight_final_dir, overwrite=True)
@@ -511,49 +420,49 @@ class FedLearner(Learner):
         with open(self.path_training_time, 'a') as f:
             f.write(f'Training time: {training_time}_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}\n')
         
-        #with mlflow.start_run(run_name="Training Metrics"):
+        with mlflow.start_run(run_name="Training Metrics"):
         
-        # Loss plot
-        save_loss_dir = os.path.join(self.path_model, self.path_loss_plot)
-        if not os.path.exists(save_loss_dir):
-            os.makedirs(save_loss_dir)
-        
-        plt.figure(figsize=(20, 20))
-
-        for i, contrast in enumerate(['T1', 'T1CE', 'T2', 'FL']):
-            plt.plot(range(1, self.epochs + 1), train_loss_history[i], label=f'Training Loss ({contrast})')
-
-        plt.xlabel('Epochs')
-        plt.ylabel('Loss')
-        plt.title('Training Loss over Epochs')
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(f'{save_loss_dir}loss_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
-        plt.close()
-
-            #mlflow.log_artifact(f'{save_loss_dir}loss_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
-
-        # Accuracy plot
-        save_acc_dir = os.path.join(self.path_model, self.path_accuracy_plot)
-        if not os.path.exists(save_acc_dir):
-            os.makedirs(save_acc_dir)
-        
-        plt.figure(figsize=(20, 20))
-
-        for i, contrast in enumerate(['T1', 'T1CE', 'T2', 'FL']):
-            plt.plot(range(1, self.epochs + 1), train_accuracy_history[i], label=f'Training Accuracy ({contrast})')
-
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.title('Training Accuracy over Epochs')
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(f'{save_acc_dir}accuracy_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
-        plt.close()
+            # Loss plot
+            save_loss_dir = os.path.join(self.path_model, self.path_loss_plot)
+            if not os.path.exists(save_loss_dir):
+                os.makedirs(save_loss_dir)
             
-            #mlflow.log_artifact(f'{save_acc_dir}accuracy_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
+            plt.figure(figsize=(20, 20))
+
+            for i, contrast in enumerate(['T1', 'T1CE', 'T2', 'FL']):
+                plt.plot(range(1, self.epochs + 1), train_loss_history[i], label=f'Training Loss ({contrast})')
+
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.title('Training Loss over Epochs')
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(f'{save_loss_dir}loss_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
+            plt.close()
+
+            mlflow.log_artifact(f'{save_loss_dir}loss_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
+
+            # Accuracy plot
+            save_acc_dir = os.path.join(self.path_model, self.path_accuracy_plot)
+            if not os.path.exists(save_acc_dir):
+                os.makedirs(save_acc_dir)
             
-            #mlflow.end_run()
+            plt.figure(figsize=(20, 20))
+
+            for i, contrast in enumerate(['T1', 'T1CE', 'T2', 'FL']):
+                plt.plot(range(1, self.epochs + 1), train_accuracy_history[i], label=f'Training Accuracy ({contrast})')
+
+            plt.xlabel('Epochs')
+            plt.ylabel('Accuracy')
+            plt.title('Training Accuracy over Epochs')
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(f'{save_acc_dir}accuracy_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
+            plt.close()
+                
+            mlflow.log_artifact(f'{save_acc_dir}accuracy_plot_job_{self.job_id}_round_{self.current_round}_client_{self.client_name}.png')
+                
+            mlflow.end_run()
 
 
     def local_validate(self, x_valid_batch, y_valid_batch, abort_signal):
@@ -564,4 +473,3 @@ class FedLearner(Learner):
         val_loss = self.model.evaluate(x_valid_batch, y_valid_batch, verbose=0)
 
         return val_loss
-

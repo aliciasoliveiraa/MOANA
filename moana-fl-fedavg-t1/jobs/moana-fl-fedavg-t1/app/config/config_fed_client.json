@@ -2,7 +2,7 @@
     "format_version": 2,
     "epochs": 100,
     "save_epoch": 10,
-    "reg_type": "BraTS2021_Training_Data_png_T256_selected_AREA_UP_23000_Alt_300slices_70_15_15_FL_L1",
+    "reg_type": "DatasetFolder",
 
     "executors": [
         {
@@ -39,13 +39,13 @@
                 "lambda_ssim": 1,
                 "lambda_vgg": 1e-2,
                 "path_logs": "logs/",
-                "path_model": "/projects/I20240003/alicia.oliveira/moana-fl-fedavg-t1/",
-                "path_data": "/projects/I20240003/alicia.oliveira/Data/",
+                "path_model": "/path/to/moana-fl-fedavg-t1/",
+                "path_data": "/path/to/Data/",
                 "path_weight": "weight/",
                 "path_saved_models": "saved_models",
                 "reg_type": "{reg_type}",
                 "save_epoch": "{save_epoch}",
-                "path_training_time": "/projects/I20240003/alicia.oliveira/moana-fl-fedavg-t1/training_time.txt",
+                "path_training_time": "/path/to/moana-fl-fedavg-t1/training_time.txt",
                 "path_loss_plot": "loss_plots/",
                 "path_accuracy_plot": "accuracy_plots/"
             }

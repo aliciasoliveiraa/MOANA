@@ -9,7 +9,7 @@ participants:
     protocol: https
     api_root: /api/v1
     port: 8443
-  - name: login.deucalion.macc.fccn.pt
+  - name: originalhostname
     type: server
     org: nvidia
     fed_learn_port: 8102
@@ -35,7 +35,7 @@ builders:
         # if overseer_exists is false, args in this section will be used.
         overseer_exists: false
         args:
-           sp_end_point: login.deucalion.macc.fccn.pt:8102:8103
+           sp_end_point: originalhostname:8102:8103
            heartbeat_interval: 6
            
   - path: nvflare.lighter.impl.cert.CertBuilder
