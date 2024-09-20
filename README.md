@@ -8,9 +8,9 @@ The first figure illustrates the complete process of the **MOANA-FL** framework.
 ![MOANA-FL Process](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/moana_process.png)
 
 The second figure demonstrates the effectiveness of the artifact correction model. It showcases three images of each contrast (T1w, T1CE, T2w, and FLAIR):
-1. **Artifact-free Image** – The original, clean input without any distortions.
-2. **Artifact-corrupted Image** – An image that has been affected by artifacts during the FL process, which can compromise model accuracy.
-3. **Corrected Image** – The output after the artifact correction model has been applied showing how the corruption is mitigated, bringing the image closer to the original artifact-free version.
+1. **Artifact-Free Image** – The original, clean input without any distortions.
+2. **Artifact-Corrupted Image** – An image that has been affected by artifacts during the FL process, which can compromise model accuracy.
+3. **Artifact-Corrected Image** – The output after the artifact correction model has been applied showing how the corruption is mitigated, bringing the image closer to the original artifact-free version.
 
 ![MOANA-FL Artifact Correction](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/correction.png)
 
