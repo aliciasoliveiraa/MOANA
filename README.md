@@ -1,8 +1,12 @@
 # MOANA-FL
- 
+
+![MOANA-FL Process](moana_process.pdf)
+
+![MOANA-FL Artifact Correction](correction.pdf)
+
 This repository contains different implementations of federated learning models under the **MOANA-FL** framework. Each folder corresponds to a specific optimization algorithm used in federated learning experiments.
 
-**Directory Structure**
+**Directory Structure:**
 - *moana-fl-fedavg:* This folder contains experiments and code related to the FedAvg algorithm, a baseline federated learning method where the local models are averaged at each round of training.
 
 - *moana-fl-fedopt:* This folder contains experiments related to the FedOpt algorithm. FedOpt improves on FedAvg by adding adaptive learning rate strategies to speed up convergence and improve model performance.
