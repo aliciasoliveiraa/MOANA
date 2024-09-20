@@ -1,6 +1,6 @@
 # MOANA-FL
 
-![MOANA-FL Process](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/moana_process.pdf)
+![MOANA-FL Process](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/moana_process.png)
 
 ![MOANA-FL Artifact Correction](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/correction.png)
 
