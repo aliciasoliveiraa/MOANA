@@ -1,8 +1,8 @@
 # MOANA-FL
 
-![MOANA-FL Process](moana_process.pdf)
+![MOANA-FL Process](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/moana_process.pdf)
 
-![MOANA-FL Artifact Correction](correction.pdf)
+![MOANA-FL Artifact Correction](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/correction.pdf)
 
 This repository contains different implementations of federated learning models under the **MOANA-FL** framework. Each folder corresponds to a specific optimization algorithm used in federated learning experiments.
 
