@@ -1,18 +1,18 @@
 # MOANA-FL
 
-**MOANA-FL** is a framework designed to improve the accuracy and reliability of Deep Learning models by addressing the presence of artifacts in medical imaging data. The framework specifically targets brain MRI scans, where data can suffer from various types of corruptions, including motion, aliasing, magnetic susceptibility, and noise, that affect model performance.
+**MOANA-FL** is a framework designed to improve the accuracy and reliability of Deep Learning models by addressing the presence of artifacts in medical imaging data. The framework explicitly targets brain MRI scans, where data can suffer from various corruptions, including motion, aliasing, magnetic susceptibility, and noise, affecting model performance.
 
-While Federated Learning (FL) is utilized within **MOANA-FL**, it is applied only during the artifact correction phase. By distributing the artifact correction process across multiple clients, **MOANA-FL** ensures privacy-preserving correction of the corrupted MRI scans, restoring them closer to their original state. This allows for more accurate downstream tasks, such as diagnosis or further analysis.
+While Federated Learning (FL) is utilized within **MOANA-FL**, it is applied only during the artifact correction phase. By distributing the artifact correction process across multiple clients, **MOANA-FL** ensures privacy-preserving correction of the corrupted MRI scans, restoring them closer to their original state.
 
-The figures below demonstrate the full **MOANA-FL** process and highlight the effectiveness of the artifact correction model.
-The figure above illustrates the complete process of the **MOANA-FL** framework. It starts with data preprocessing, where raw data is prepared for training. This is followed by the simulation model of artifacts, and the correction model is applied to mitigate the impact of the artifacts introduced during training.
+The figures below demonstrate the complete **MOANA-FL** process and highlight the effectiveness of the artifact correction model.
+The first figure illustrates the complete process of the **MOANA-FL** framework. It starts with data preprocessing, where raw data is prepared for training. This is followed by the simulation model for the aforementioned artifacts and the correction model, which is applied to mitigate the impact of the artifacts introduced.
 
 ![MOANA-FL Process](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/moana_process.png)
 
 The second figure demonstrates the effectiveness of the artifact correction model. It showcases three images of each contrast (T1w, T1CE, T2w, and FLAIR):
 1. **Artifact-free Image** – The original, clean input without any distortions.
 2. **Artifact-corrupted Image** – An image that has been affected by artifacts during the FL process, which can compromise model accuracy.
-3. **Corrected Image** – The output after the artifact correction model has been applied, showing how the corruption is mitigated, bringing the image closer to the original artifact-free version.
+3. **Corrected Image** – The output after the artifact correction model has been applied showing how the corruption is mitigated, bringing the image closer to the original artifact-free version.
 
 ![MOANA-FL Artifact Correction](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/correction.png)
 
@@ -28,7 +28,7 @@ This repository contains different implementations of FL models under the **MOAN
 
 #### Structure:
 
-- **app/config/**: Configuration files for FL-clients and the server.
+- **app/config/**: Configuration files for FL clients and the server.
   - `config_fed_client.json`
   - `config_fed_server.json`
   
