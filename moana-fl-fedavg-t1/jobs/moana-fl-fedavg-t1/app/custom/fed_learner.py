@@ -56,13 +56,13 @@ class FedLearner(Learner):
         lambda_ssim=1,
         lambda_vgg=1e-2,
         path_logs='logs/',
-        path_model='/path/to/moana-fl-fedavg-t1/',
+        path_model='/path/to/moana-fl-fedavg/',
         path_data='/path/to/Data/',
         path_weight='weight/',
         path_saved_models='saved_models',
         reg_type='DatasetFolder',
         save_epoch=10,
-        path_training_time='/path/to/moana-fl-fedavg-t1/training_time.txt',
+        path_training_time='/path/to/moana-fl-fedavg/training_time.txt',
         path_loss_plot='loss_plots/',
         path_accuracy_plot='accuracy_plots/'
     ):

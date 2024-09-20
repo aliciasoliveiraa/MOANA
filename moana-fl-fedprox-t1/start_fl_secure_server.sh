@@ -19,7 +19,7 @@ servername=$HOSTNAME
 
 #CREATE WORKSPACE
 
-sed -i "s/originalhostname/${HOSTNAME}/g" /path/to/moana-fl-fedprox-t1/workspaces/project.yml
+sed -i "s/originalhostname/${HOSTNAME}/g" /path/to/moana-fl-fedprox/workspaces/project.yml
 
 cd "${PWD}/workspaces/"
 
@@ -32,7 +32,7 @@ nvflare provision -p ./project.yml
 cp -r ./workspace/project/prod_00/. ./workspace
 cd ..
 
-sed -i "s/${HOSTNAME}/originalhostname/g" /path/to/moana-fl-fedprox-t1/workspaces/project.yml
+sed -i "s/${HOSTNAME}/originalhostname/g" /path/to/moana-fl-fedprox/workspaces/project.yml
 
 workspace="${PWD}/workspaces/workspace"
 

@@ -355,7 +355,7 @@ def ssim_loss(img1, img2):
 
 
 def vgg_layers(layer_names):
-    local_weights_path = '/path/to/moana-fl-fedopt-t1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+    local_weights_path = '/path/to/moana-fl-fedopt/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
     vgg = tf.keras.applications.vgg16.VGG16(include_top=False, weights=local_weights_path, input_shape=(256, 256, 3))
     
     vgg.trainable = False
