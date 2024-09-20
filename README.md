@@ -71,3 +71,6 @@ sbatch start_fl_secure_clients.sh
 
 # Submit a FL job
 sbatch submit_job.py
+
+
+For more information please contact - alicia.oliveira@inesctec and claudia.v.brito@inesctec.pt
