@@ -14,9 +14,13 @@ The second figure demonstrates the effectiveness of the artifact correction mode
 
 ![MOANA Artifact Correction](https://github.com/aliciasoliveiraa/MOANA/blob/main/correction.png)
 
-This repository contains different implementations of FL models under the **MOANA** framework. Each folder corresponds to a specific optimization algorithm used in FL experiments.
+The framework includes comprehensive code for data processing and the simulation model. It facilitates the entire pipeline from raw data to actionable insights. The **Data Processing** module cleans, normalizes, and prepares brain MRI scans for artifact correction to ensure high-quality input data. The **Simulation Model** replicates real-world scenarios, including artifacts like motion, aliasing, magnetic susceptibility, and noise. These models demonstrate the scalability and adaptability of the framework and provide valuable benchmarks for performance under different conditions. This repository also contains different implementations of FL models under the **MOANA** framework, including three optimization algorithms used in FL experiments.
 
 **Directory Structure:**
+- *data-processing:* This folder contains scripts for preprocessing of datasets, including format conversions, rotations, resizing, and selection of slices.
+
+- *simulation-model:* This folder contains two levels of artifact severity in medical images. Level 1 contains motion artifacts, and level 2 simulates aliasing, magnetic susceptibility, and noise. 
+
 - *moana-fl-fedavg:* This folder contains experiments and code related to the FedAvg algorithm, a baseline FL method where the local models are averaged at each round of training.
 
 - *moana-fl-fedopt:* This folder contains experiments related to the FedOpt algorithm. FedOpt improves on FedAvg by adding adaptive learning rate strategies to speed up convergence and improve model performance.
@@ -24,7 +28,7 @@ This repository contains different implementations of FL models under the **MOAN
 - *moana-fl-fedprox:* This folder contains experiments for the FedProx algorithm. FedProx adds a proximal term to the loss function, which helps handle system heterogeneity across the participating devices.
 
 
-#### Structure:
+#### Structure of FL algorithms:
 
 - **app/config/**: Configuration files for FL clients and the server.
   - `config_fed_client.json`
@@ -57,7 +61,17 @@ This repository contains different implementations of FL models under the **MOAN
 #### Usage:
 
 ```bash
-# Install dependencies
+# Data processing
+sbatch dataprocessing.sh
+
+# Simulate artifacts L1
+sbatch simulation_l1.sh
+
+# Simulate artifacts L2
+sbatch simulation_l2.sh
+
+# Correct artifacts
+# Install dependencies (run in a virtual env)
 pip install -r requirements.txt
 
 # Start the MLflow
