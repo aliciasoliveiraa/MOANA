@@ -1,20 +1,20 @@
-# MOANA-FL
+# MOANA
 
-**MOANA-FL** is a framework developed to improve the accuracy and reliability of Deep Learning models by addressing the presence of artifacts in medical imaging data. The framework explicitly targets brain Magnetic Resonance Imaging (MRI) scans, where data can suffer from various corruptions, including motion, aliasing, magnetic susceptibility, and noise, affecting model performance. **MOANA-FL** is designed to be deployed on High Performance Computing (HPC) systems, leveraging their powerful parallel processing capabilities to efficiently handle the large-scale computations required for Federated Learning (FL) and artifact correction in brain MRI scans. HPC systems allow the framework to distribute tasks such as artifact correction across multiple nodes and clients, ensuring faster processing and scalability for large datasets. While FL is utilized within **MOANA-FL**, it is applied only during the artifact correction phase. By distributing the artifact correction process across multiple clients, **MOANA-FL** ensures privacy-preserving correction of the corrupted MRI scans, restoring them closer to their original state.
+**MOANA** is a framework developed to improve the accuracy and reliability of Deep Learning models by addressing the presence of artifacts in medical imaging data. The framework explicitly targets brain Magnetic Resonance Imaging (MRI) scans, where data can suffer from various corruptions, including motion, aliasing, magnetic susceptibility, and noise, affecting model performance. **MOANA** is designed to be deployed on High Performance Computing (HPC) systems, leveraging their powerful parallel processing capabilities to efficiently handle the large-scale computations required for Federated Learning (FL) and artifact correction in brain MRI scans. HPC systems allow the framework to distribute tasks such as artifact correction across multiple nodes and clients, ensuring faster processing and scalability for large datasets. While FL is utilized within **MOANA**, it is applied only during the artifact correction phase. By distributing the artifact correction process across multiple clients, **MOANA** ensures privacy-preserving correction of the corrupted MRI scans, restoring them closer to their original state.
 
-The figures below demonstrate the complete **MOANA-FL** process and highlight the effectiveness of the artifact correction model.
-The first figure illustrates the complete process of the **MOANA-FL** framework. It starts with data preprocessing, where raw data is prepared for training. This is followed by the simulation model for the aforementioned artifacts and the correction model, which is applied to mitigate the impact of the artifacts introduced.
+The figures below demonstrate the complete **MOANA** process and highlight the effectiveness of the artifact correction model.
+The first figure illustrates the complete process of the **MOANA** framework. It starts with data preprocessing, where raw data is prepared for training. This is followed by the simulation model for the aforementioned artifacts and the correction model, which is applied to mitigate the impact of the artifacts introduced.
 
-![MOANA-FL Process](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/moana_process.png)
+![MOANA Process](https://github.com/aliciasoliveiraa/MOANA/blob/main/moana_process.png)
 
 The second figure demonstrates the effectiveness of the artifact correction model. It showcases three images of each contrast (T1w, T1CE, T2w, and FLAIR):
 1. **Artifact-Free Image** – The original, clean input without any distortions.
 2. **Artifact-Corrupted Image** – An image that has been affected by artifacts during the FL process, which can compromise model accuracy.
 3. **Artifact-Corrected Image** – The output after the artifact correction model has been applied showing how the corruption is mitigated, bringing the image closer to the original artifact-free version.
 
-![MOANA-FL Artifact Correction](https://github.com/aliciasoliveiraa/MOANA-FL/blob/main/correction.png)
+![MOANA Artifact Correction](https://github.com/aliciasoliveiraa/MOANA/blob/main/correction.png)
 
-This repository contains different implementations of FL models under the **MOANA-FL** framework. Each folder corresponds to a specific optimization algorithm used in FL experiments.
+This repository contains different implementations of FL models under the **MOANA** framework. Each folder corresponds to a specific optimization algorithm used in FL experiments.
 
 **Directory Structure:**
 - *moana-fl-fedavg:* This folder contains experiments and code related to the FedAvg algorithm, a baseline FL method where the local models are averaged at each round of training.
