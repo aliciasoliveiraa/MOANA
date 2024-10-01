@@ -12,4 +12,4 @@
 module load Python/3.9.5-GCCcore-10.3.0
 source /path/to/env/bin/activate
 srun pip3 install numpy==1.21.5 nibabel==4.0.2 scipy==1.4.1 imageio==2.6.1 opencv-python
-srun python motion_simulation.py
+srun python motion_simulation_l1.py
